@@ -1,0 +1,21 @@
+{
+    "name": "cobweb",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "test": "firebase hosting:channel:deploy preview_name",
+        "deploy": "npm run build && firebase deploy"
+    },
+    "devDependencies": {
+        "esbuild": "^0.28.1",
+        "vite": "^8.0.12"
+    },
+    "dependencies": {
+        "firebase": "^12.15.0",
+        "sortablejs": "^1.15.7"
+    }
+}
