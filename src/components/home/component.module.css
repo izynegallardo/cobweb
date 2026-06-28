@@ -1,0 +1,104 @@
+.main {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
+
+    #center {
+        display: flex;
+        flex-direction: column;
+        place-items: center;
+        margin: 250px auto 230px auto;
+
+        @media (max-width: 1024px) {
+            padding: 42px 20px 24px;
+        }
+    }
+
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 600px;
+        gap: 16px;
+    }
+
+    .headline {
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        color: var(--text-h);
+        margin: 0;
+
+        @media (max-width: 1024px) {
+            font-size: 36px;
+        }
+    }
+
+    .tagline {
+        font-size: 18px;
+        color: var(--text);
+        max-width: 460px;
+        line-height: 1.6;
+        margin: 0;
+
+        @media (max-width: 1024px) {
+            font-size: 16px;
+        }
+    }
+
+    .cta {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        /* transition: opacity 0.15s; */
+        transition: all 0.2s ease;
+
+        &:hover {
+            opacity: 0.85;
+            box-shadow: 0 6px 16px var(--accent-border);
+        }
+    }
+
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 24px;
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        font-weight: 500;
+        font-size: 15px;
+        text-decoration: none;
+        transition:
+            border-color 0.15s,
+            color 0.15s;
+
+        &:hover {
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+    }
+
+    @media (max-width: 768px) {
+        #center {
+            margin: 90px auto;
+        }
+    }
+}

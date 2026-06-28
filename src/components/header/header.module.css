@@ -1,0 +1,234 @@
+@keyframes expandWidth {
+    from {
+        transform: scaleX(0.5);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.header {
+    /* ── Utility ─────────────────────────────────────────────────── */
+    .rounded-lg {
+        border-radius: 30px;
+    }
+
+    /* ── Main ─────────────────────────────────────────────────── */
+
+    .app-header {
+        position: relative;
+        margin: 50px 50px 0;
+        border-radius: 50px;
+        background-color: #e8eaed;
+        box-shadow: 0 0 50px #e8eaed;
+        z-index: 1000;
+        height: 64px;
+        transform-origin: center;
+        animation: expandWidth 0.5s ease-out forwards;
+    }
+
+    .header-container {
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* ── Logo ─────────────────────────────────────────────────── */
+    .logo-link {
+        text-decoration: none;
+        color: #333;
+        flex-shrink: 0;
+    }
+
+    .logo-text {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        color: #000000;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .logo-o {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 0.9em;
+        height: 0.9em;
+        margin: 0 -0.02em;
+    }
+
+    .logo-icon {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    /* ── Navigation ───────────────────────────────────────────── */
+    .header-nav {
+        flex: 1;
+        margin: 0 48px;
+    }
+
+    .nav-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 32px;
+    }
+
+    /* Desktop link */
+    .nav-link {
+        position: relative;
+        text-decoration: none;
+        color: #4b5563;
+        font-size: 15px;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+        color: var(--accent);
+    }
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: var(--accent);
+        transition: width 0.2s;
+    }
+
+    .nav-link:hover::after {
+        width: 100%;
+    }
+
+    /* Hide icon span on desktop */
+    .nav-icon {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        /* display: none; */
+    }
+
+    .nav-label {
+        display: inline;
+    }
+
+    /* ── Actions ──────────────────────────────────────────────── */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .btn-profile {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+    }
+
+    .btn-profile:hover {
+        background-color: #f3f4f6;
+    }
+
+    .profile-icon {
+        font-size: 20px;
+        text-decoration: none;
+    }
+
+    .btn-logout {
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-logout:hover {
+        background-color: #1d4ed8;
+    }
+
+    /* ── Mobile ───────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .header-container {
+            padding: 0 16px;
+        }
+
+        .header-logo {
+            margin: 0 20px;
+        }
+
+        .header-nav {
+            flex: none;
+            margin: 0;
+        }
+
+        .desktop-letter {
+            display: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-list {
+            gap: 4px;
+            justify-content: center;
+        }
+
+        /* Icon + tiny label pill */
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #4b5563;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .nav-link::after {
+            display: none;
+        }
+
+        .nav-link:hover {
+            background-color: #f3f4f6;
+            color: var(--accent);
+        }
+
+        .nav-icon {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            display: block;
+            font-size: 20px;
+            line-height: 1;
+        }
+    }
+}

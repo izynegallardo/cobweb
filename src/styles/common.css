@@ -1,0 +1,362 @@
+:root {
+    --text: #6b6375;
+    --text-h: #08060d;
+    --bg: #fff;
+    --border: #e5e4e7;
+    --code-bg: #f4f3ec;
+    --accent: #0088cc; /* Vibrant Cyan-Blue */
+    --accent-bg: rgba(0, 136, 204, 0.1); /* 10% opacity */
+    --accent-border: rgba(0, 136, 204, 0.5); /* 50% opacity */
+    --social-bg: rgba(244, 243, 236, 0.5);
+    --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+    --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+    --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, Consolas, monospace;
+
+    font: 18px/145% var(--sans);
+    letter-spacing: 0.18px;
+    color-scheme: light dark;
+    color: var(--text);
+    background: var(--bg);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    @media (max-width: 1024px) {
+        font-size: 16px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text: #9ca3af;
+        --text-h: #f3f4f6;
+        --bg: #16171d;
+        --border: #2e303a;
+        --code-bg: #1f2028;
+        --accent: #38bdf8; /* Bright Sky Cyan */
+        --accent-bg: rgba(56, 189, 248, 0.15); /* 15% opacity */
+        --accent-border: rgba(56, 189, 248, 0.5); /* 50% opacity */
+        --social-bg: rgba(47, 48, 58, 0.5);
+        --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    }
+
+    #social .button-icon {
+        filter: invert(1) brightness(2);
+    }
+}
+
+body {
+    margin: 0;
+}
+
+/* ── Skeleton loading ── */
+
+@keyframes skeleton-shimmer {
+    /* Slides a light sheen left-to-right over the bone */
+    from {
+        background-position: -200% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-bone {
+    /*
+     * The gradient fakes a moving light sheen.
+     * --bg is the base; a semi-transparent white band slides across it.
+     * background-size: 200% lets the band travel fully across the element.
+     */
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--border) 25%, var(--code-bg) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+.skeleton-wrap {
+    /* Layout container — mirrors the real content's flex direction */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+/* ── Skeleton layout variants ───────────────────────────────── */
+
+.skeleton-profile-top {
+    align-items: center;
+    gap: 16px;
+}
+.skeleton-profile-names {
+    align-items: center;
+    gap: 8px;
+    max-width: 220px;
+}
+.skeleton-links {
+    align-items: center;
+    gap: 12px;
+    max-width: 420px;
+}
+
+.skeleton-form {
+    height: 655px;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 0;
+}
+.skeleton-form-avatar {
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.skeleton-form-fields {
+    gap: 16px;
+}
+.skeleton-form-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.skeleton-list-items {
+    flex-grow: 1;
+    justify-content: flex-start;
+    align-items: center;
+}
+.skeleton-list-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 80%;
+    height: 82px;
+    box-sizing: content-box;
+    background: var(--code-bg);
+}
+.skeleton-list-text {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+.skeleton-list-actions {
+    flex-direction: row;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+    width: auto;
+}
+
+/* ── Skeleton bone variants ─────────────────────────────────── */
+
+.skeleton-bone--circle-lg {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.skeleton-bone--circle-sm {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+}
+
+.skeleton-bone--text-lg {
+    height: 36px;
+}
+.skeleton-bone--text-md {
+    height: 16px;
+}
+.skeleton-bone--text-sm {
+    height: 13px;
+}
+
+.skeleton-bone--pill-lg {
+    height: 52px;
+    width: 100%;
+    border-radius: 25px;
+}
+.skeleton-bone--pill-sm {
+    height: 42px;
+    width: 100%;
+    border-radius: 25px;
+    margin-top: 4px;
+}
+.skeleton-bone--input {
+    height: 40px;
+    width: 100%;
+    border-radius: 10px;
+}
+.skeleton-bone--textarea {
+    height: 80px;
+    width: 100%;
+    border-radius: 10px;
+}
+
+.skeleton-bone--icon-md {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.skeleton-bone--icon-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+}
+.skeleton-bone--toggle {
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+}
+.skeleton-bone--drag {
+    width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    opacity: 0.3;
+}
+
+h1,
+h2 {
+    font-family: var(--heading);
+    font-weight: 500;
+    color: var(--text-h);
+}
+
+h1 {
+    font-size: 56px;
+    letter-spacing: -1.68px;
+    margin: 32px 0;
+    @media (max-width: 1024px) {
+        font-size: 36px;
+        margin: 20px 0;
+    }
+}
+h2 {
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+    margin: 0 0 8px;
+    @media (max-width: 1024px) {
+        font-size: 20px;
+    }
+}
+p {
+    margin: 0;
+}
+
+footer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+code,
+.counter {
+    font-family: var(--mono);
+    display: inline-flex;
+    border-radius: 4px;
+    color: var(--text-h);
+}
+
+code {
+    font-size: 15px;
+    line-height: 135%;
+    padding: 4px 8px;
+    background: var(--code-bg);
+}
+
+.counter {
+    font-size: 16px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+
+    &:hover {
+        border-color: var(--accent-border);
+    }
+    &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    /* border-inline: 1px solid var(--border); */
+    width: 1126px;
+    max-width: 100%;
+    min-height: 100svh;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#spacer {
+    height: 88px;
+    border-top: 1px solid var(--border);
+    @media (max-width: 1024px) {
+        height: 48px;
+    }
+}
+
+.ticks {
+    position: relative;
+    width: 100%;
+
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        top: -4.5px;
+        border: 5px solid transparent;
+    }
+
+    &::before {
+        left: 0;
+        border-left-color: var(--border);
+    }
+    &::after {
+        right: 0;
+        border-right-color: var(--border);
+    }
+}
+
+#under-maintenance {
+    color: var(--text);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    width: 1126px;
+    max-width: 100%;
+    min-height: 100svh;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#under-maintenance h1 {
+    @media (max-width: 768px) {
+        line-height: 1;
+    }
+}
+
+#under-maintenance p {
+    @media (max-width: 768px) {
+        padding: 0 10px;
+    }
+}

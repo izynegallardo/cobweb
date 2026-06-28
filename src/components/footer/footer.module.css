@@ -1,0 +1,35 @@
+.footer {
+    .app-footer {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0;
+        /* border-top: 1px solid var(--text); */
+        padding: 16px;
+    }
+
+    .footer-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .header-nav {
+            display: none;
+        }
+
+        .header-container {
+            padding: 0 16px;
+        }
+
+        .nav-list {
+            gap: 16px;
+        }
+    }
+}
