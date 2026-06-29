@@ -3,6 +3,7 @@ import styles from './component.module.css'
 import iconDrag from '@/assets/icons/drag.svg?raw'
 import iconEdit from '@/assets/icons/edit.svg?raw'
 import iconTrash from '@/assets/icons/trash.svg?raw'
+import iconEllipsis from '@/assets/icons/trash.svg?raw'
 import { getCurrentUserProfile } from '@/services/users'
 import {
     createLink,
@@ -11,6 +12,7 @@ import {
     updateLinkData,
     deleteLinkData,
     reorderLinks,
+    subscribeToLinkClicks,
 } from '@/services/dashboard'
 import { createPaginator } from '@/utils/pagination'
 import { showSkeleton, hideSkeleton } from '@/utils/skeleton'
@@ -18,7 +20,19 @@ import { normalizeUrl } from '@/utils/normalization'
 
 const PAGE_SIZE = 12
 
+// Holds the Firestore onSnapshot unsubscribe fn.
+// Cleaned up each time Events() runs so we never double-attach.
+let _unsubscribeClicks = null
+// Holds the document-level outside-click handler for mobile menus.
+let _removeOutsideClickHandler = null
+
 export default async function Events() {
+    // Tear down any listener left over from a prior dashboard visit
+    _unsubscribeClicks?.()
+    _unsubscribeClicks = null
+    _removeOutsideClickHandler?.()
+    _removeOutsideClickHandler = null
+
     const user = await getCurrentUserProfile()
     renderSidebarFooter(user)
 
@@ -31,7 +45,7 @@ export default async function Events() {
 
     // 1 Firestore read to know the total — lets us show numbered pages upfront
     const totalCount = await getLinkCount(user.uid)
-    const state = { totalPages: Math.ceil(totalCount / PAGE_SIZE) || 1 }
+    const state = { totalPages: Math.ceil(totalCount / PAGE_SIZE) || 1, totalCount }
 
     const paginator = createPaginator({
         pageSize: PAGE_SIZE,
@@ -48,6 +62,43 @@ export default async function Events() {
     handleToggleBtn(linksList, paginator, user, state)
     renderContentHeader(user, linksList, paginator, state)
     handleNavSwitch()
+
+    // Close any open mobile action menu when the user clicks outside a link card.
+    const outsideHandler = (e) => {
+        if (!e.target.closest(`.${styles['link-card']}`)) {
+            closeAllMenus()
+        }
+    }
+    document.addEventListener('click', outsideHandler)
+    _removeOutsideClickHandler = () => document.removeEventListener('click', outsideHandler)
+
+    // Real-time click count updates via Firestore onSnapshot (gRPC).
+    // Only 'modified' events are processed — initial ADDED events are skipped
+    // since we already have the data from the first fetch above.
+    _unsubscribeClicks = subscribeToLinkClicks(user.uid, (id, clickCount, isActive) => {
+        // Keep in-memory cache in sync regardless of which page is visible
+        paginator.updateItem(id, { clickCount })
+
+        // Update the DOM only if this card is on the current page
+        const card = linksList.querySelector(`[data-id="${id}"]`)
+        if (!card) return
+        const metaEl = card.querySelector(`.${styles['link-meta']}`)
+        if (!metaEl) return
+        metaEl.textContent = isActive ? `${clickCount} clicks` : `${clickCount} clicks · inactive`
+    })
+}
+
+// ── Mobile menu helpers ───────────────────────────────────
+
+/**
+ * Closes all open mobile action menus and resets aria-expanded on their
+ * trigger buttons. Safe to call even when no menus are open.
+ */
+function closeAllMenus() {
+    document.querySelectorAll(`.${styles['link-card']}.${styles['menu-open']}`).forEach((card) => {
+        card.classList.remove(styles['menu-open'])
+        card.querySelector(`.${styles['btn-ellipsis']}`)?.setAttribute('aria-expanded', 'false')
+    })
 }
 
 // ── Pagination ────────────────────────────────────────────
@@ -177,7 +228,7 @@ function renderSidebarFooter(user) {
     }
 }
 
-function renderLinks(linksList, links, user) {
+function renderLinks(linksList, links, user, paginator, state) {
     try {
         if (links.length === 0) {
             linksList.innerHTML = `
@@ -188,9 +239,11 @@ function renderLinks(linksList, links, user) {
             `
             linksList
                 .querySelector(`.${styles['trigger-action']}`)
-                ?.addEventListener('click', () => renderAddLinkModal(user, linksList))
+                ?.addEventListener('click', () =>
+                    renderAddLinkModal(user, linksList, paginator, state),
+                )
 
-            linksList.style.alignItems = 'center'
+            linksList.style.justifyContent = 'center'
         } else {
             linksList.replaceChildren(...links.map(renderLinkCard))
             linksList.style.flexGrow = '1'
@@ -204,8 +257,22 @@ function renderLinks(linksList, links, user) {
 
 function handleToggleBtn(linksList, paginator, user, state) {
     linksList?.addEventListener('click', async (e) => {
+        const ellipsisBtn = e.target.closest(`.${styles['btn-ellipsis']}`)
         const toggleBtn = e.target.closest(`.${styles['toggle']}`)
         const iconBtn = e.target.closest(`.${styles['btn-icon']}`)
+
+        // ── Ellipsis: open / close the mobile action menu ──────────────
+        if (ellipsisBtn) {
+            const card = ellipsisBtn.closest(`.${styles['link-card']}`)
+            if (!card) return
+            const isOpen = card.classList.contains(styles['menu-open'])
+            closeAllMenus()
+            if (!isOpen) {
+                card.classList.add(styles['menu-open'])
+                ellipsisBtn.setAttribute('aria-expanded', 'true')
+            }
+            return
+        }
 
         if (toggleBtn) {
             const { id } = toggleBtn.dataset
@@ -217,8 +284,11 @@ function handleToggleBtn(linksList, paginator, user, state) {
             const metaEl = card?.querySelector(`.${styles['link-meta']}`)
             const clicks = paginator.getPageItems().find((l) => l.id === id)?.clickCount ?? 0
 
-            toggleBtn.classList.toggle(styles['toggle-on'], nextActive)
-            toggleBtn.setAttribute('aria-label', nextActive ? 'Disable link' : 'Enable link')
+            // Sync ALL toggle buttons for this link (desktop row + mobile menu)
+            card?.querySelectorAll(`.${styles['toggle']}[data-id="${id}"]`).forEach((t) => {
+                t.classList.toggle(styles['toggle-on'], nextActive)
+                t.setAttribute('aria-label', nextActive ? 'Disable link' : 'Enable link')
+            })
             card?.classList.toggle(styles['inactive'], !nextActive)
             if (metaEl)
                 metaEl.textContent = nextActive ? `${clicks} clicks` : `${clicks} clicks · inactive`
@@ -228,8 +298,10 @@ function handleToggleBtn(linksList, paginator, user, state) {
                 paginator.updateItem(id, { isActive: nextActive })
             } catch {
                 // Revert all visual changes if Firestore write fails
-                toggleBtn.classList.toggle(styles['toggle-on'], isOn)
-                toggleBtn.setAttribute('aria-label', isOn ? 'Disable link' : 'Enable link')
+                card?.querySelectorAll(`.${styles['toggle']}[data-id="${id}"]`).forEach((t) => {
+                    t.classList.toggle(styles['toggle-on'], isOn)
+                    t.setAttribute('aria-label', isOn ? 'Disable link' : 'Enable link')
+                })
                 card?.classList.toggle(styles['inactive'], !isOn)
                 if (metaEl)
                     metaEl.textContent = isOn ? `${clicks} clicks` : `${clicks} clicks · inactive`
@@ -286,6 +358,31 @@ function renderLinkCard(link) {
                 ${iconTrash}
             </button>
         </div>
+        <div class="${styles['link-actions-mobile']}">
+            <button
+                type="button"
+                class="${styles['btn-ellipsis']}"
+                data-id="${link.id}"
+                aria-label="More options"
+                aria-expanded="false"
+            >
+                ${iconEllipsis}
+            </button>
+            <div class="${styles['link-actions-menu']}" role="menu">
+                <button
+                    type="button"
+                    class="${styles['toggle']} ${link.isActive ? styles['toggle-on'] : ''}"
+                    data-id="${link.id}"
+                    aria-label="${link.isActive ? 'Disable link' : 'Enable link'}"
+                ></button>
+                <button type="button" class="${styles['btn-icon']}" data-action="edit" data-id="${link.id}" title="Edit">
+                    ${iconEdit}
+                </button>
+                <button type="button" class="${styles['btn-icon']} ${styles['btn-danger']}" data-action="delete" data-id="${link.id}" title="Delete">
+                    ${iconTrash}
+                </button>
+            </div>
+        </div>
     `
 
     // Logo icon via DOM — never injected as HTML
@@ -337,7 +434,7 @@ function hideSortBar() {
  * @param {object}      state      — { totalPages }
  */
 function renderLinksAndSort(linksList, links, paginator, user, state) {
-    renderLinks(linksList, links, user)
+    renderLinks(linksList, links, user, paginator, state)
     hideSortBar()
     if (links.length > 0) {
         initSortable(linksList)
@@ -473,6 +570,7 @@ async function refreshCurrentPage(linksList, paginator, state, user) {
     const page = paginator.currentPage
     const newCount = await getLinkCount(user.uid)
     state.totalPages = Math.ceil(newCount / PAGE_SIZE) || 1
+    state.totalCount = newCount
 
     paginator.reset()
 
@@ -629,17 +727,17 @@ function renderAddLinkModal(user, linksList, paginator, state) {
             const url = normalizeUrl(formData.get('url'))
 
             try {
-                await createLink(user.uid, { title, url })
+                const newLink = await createLink(user.uid, { title, url })
 
-                // Re-fetch count and reset paginator so next navigation is fresh
-                const newCount = await getLinkCount(user.uid)
-                if (state) state.totalPages = Math.ceil(newCount / PAGE_SIZE) || 1
-                paginator?.reset()
+                // Optimistic update — no refetch needed.
+                // createLink returns the full link object so we inject it
+                // directly into the paginator's in-memory list and re-render.
+                paginator.appendItem(newLink)
+                state.totalCount++
+                state.totalPages = Math.ceil(state.totalCount / PAGE_SIZE) || 1
 
-                // Reload page 1 to reflect the updated list
-                const refreshed = await paginator?.nextPage()
-                if (refreshed) renderLinksAndSort(linksList, refreshed, paginator, user, state)
-                if (state) renderPaginationBar(linksList, paginator, state, user)
+                renderLinksAndSort(linksList, paginator.getPageItems(), paginator, user, state)
+                renderPaginationBar(linksList, paginator, state, user)
 
                 window.dialog.show('Link added.', 'success')
             } catch (error) {
@@ -667,6 +765,8 @@ function handleNavSwitch() {
     navItems.forEach((item) => {
         item.addEventListener('click', (e) => {
             e.preventDefault()
+            // Silently ignore disabled items — they have no view to render yet
+            if (item.getAttribute('aria-disabled') === 'true') return
             navItems.forEach((i) => i.classList.remove(styles['active']))
             item.classList.add(styles['active'])
             // TODO: render corresponding view section

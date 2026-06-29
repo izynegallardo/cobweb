@@ -7,6 +7,8 @@ import {
     getDocs,
     getCountFromServer,
     writeBatch,
+    onSnapshot,
+    increment,
     query as firestoreQuery,
     orderBy,
     limit,
@@ -148,4 +150,26 @@ export async function deleteLinkData(uid, linkId) {
         console.error('<error> Dashboard.deleteLinkData:', error)
         throw error
     }
+}
+
+/**
+ * Subscribe to real-time changes on a user's links collection.
+ * Fires onChange only for modified documents — the initial ADDED snapshot
+ * is intentionally ignored since we already have that data from the first fetch.
+ *
+ * Returns the Firestore unsubscribe function. Call it to tear down the listener.
+ *
+ * @param {string}   uid
+ * @param {Function} onChange  (id: string, clickCount: number, isActive: boolean) => void
+ * @returns {Function} unsubscribe
+ */
+export function subscribeToLinkClicks(uid, onChange) {
+    const ref = collection(database, 'users', uid, 'links')
+    return onSnapshot(ref, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type !== 'modified') return
+            const data = change.doc.data()
+            onChange(change.doc.id, data.clickCount ?? 0, data.isActive ?? true)
+        })
+    })
 }
