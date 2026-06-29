@@ -19,4 +19,4 @@ jobs:
                   channelId: live
                   projectId: cobweb-site
                   force: true
-                  firebaseToolsVersion: '13.15.0'
+                  firebaseToolsVersion: '14.1.0'
