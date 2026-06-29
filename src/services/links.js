@@ -1,6 +1,9 @@
 import {
     collection,
+    doc,
     addDoc,
+    updateDoc,
+    increment,
     getDocs,
     getCountFromServer,
     query as firestoreQuery,
@@ -78,6 +81,19 @@ export async function getPublicLinkCount(uid) {
     const q = firestoreQuery(ref, where('isActive', '==', true))
     const snapshot = await getCountFromServer(q)
     return snapshot.data().count
+}
+
+/**
+ * Atomically increment a link's click counter by 1.
+ * Called fire-and-forget from the public profile page.
+ * Never throws to the caller — a failed write should never block navigation.
+ *
+ * @param {string} uid
+ * @param {string} linkId
+ */
+export async function incrementLinkClick(uid, linkId) {
+    const ref = doc(database, 'users', uid, 'links', linkId)
+    await updateDoc(ref, { clickCount: increment(1) })
 }
 
 // ── Helpers ──────────────────────────────────────────────

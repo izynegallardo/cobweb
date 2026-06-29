@@ -1,3 +1,18 @@
+/*
+ * Dashboard component styles.
+ */
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .main {
     position: fixed;
     inset: 0;
@@ -83,6 +98,17 @@
     .nav-item.active {
         background: var(--accent-bg);
         color: var(--accent);
+    }
+
+    /* Disabled nav items — not yet implemented views */
+    .nav-item[aria-disabled='true'] {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    .nav-item[aria-disabled='true']:hover {
+        background: transparent;
+        color: var(--text);
     }
 
     .badge {
@@ -238,7 +264,9 @@
         width: 80%;
         gap: 12px;
         background: var(--code-bg);
-        transition: border-color 0.15s;
+        transition:
+            border-color 0.15s,
+            opacity 0.15s;
     }
 
     .link-card:hover {
@@ -247,6 +275,12 @@
 
     .link-card.inactive {
         opacity: 0.45;
+    }
+
+    /* Restore full visibility on hover so the user gets clear interaction
+       feedback even when a link is inactive. */
+    .link-card.inactive:hover {
+        opacity: 1;
     }
 
     .drag-handle {
@@ -329,6 +363,11 @@
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
+    }
+
+    /* Hidden on desktop; only revealed on mobile as the ⋮ trigger wrapper */
+    .link-actions-mobile {
+        display: none;
     }
 
     /* Toggle switch */
@@ -596,6 +635,97 @@
 
         .content-actions {
             justify-content: end;
+        }
+
+        .links-list {
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+
+        .link-card {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .link-url {
+            display: none;
+        }
+
+        /* Swap desktop action row for the mobile ⋮ wrapper */
+        .link-actions {
+            display: none;
+        }
+
+        .link-actions-mobile {
+            display: flex;
+            align-items: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* ⋮ trigger button */
+        .btn-ellipsis {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: var(--text);
+            cursor: pointer;
+            transition:
+                border-color 0.15s,
+                color 0.15s;
+        }
+
+        .btn-ellipsis:hover,
+        .link-card.menu-open .btn-ellipsis {
+            border-color: var(--accent-border);
+            color: var(--accent);
+        }
+
+        /* Floating mini-toolbar — appears above the ⋮ button */
+        .link-actions-menu {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            right: 0;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 6px;
+            gap: 6px;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            flex-direction: row;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        /* Downward-pointing caret connecting the menu to the ⋮ button */
+        .link-actions-menu::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 9px;
+            width: 8px;
+            height: 8px;
+            background: var(--code-bg);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transform: rotate(45deg);
+        }
+
+        .link-card.menu-open .link-actions-menu {
+            display: flex;
+            animation: menuFadeIn 0.15s ease;
+        }
+
+        .sort-save-bar {
+            width: 50%;
+            left: 60%;
         }
     }
 }

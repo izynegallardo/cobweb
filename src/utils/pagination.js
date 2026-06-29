@@ -107,6 +107,9 @@ export function createPaginator({ pageSize = 12, queryFn }) {
         goToPage,
         reset,
         getPageItems,
+        appendItem(item) {
+            allItems.push(item)
+        },
         updateItem(id, patch) {
             const index = allItems.findIndex((item) => item.id === id)
             if (index !== -1) allItems[index] = { ...allItems[index], ...patch }

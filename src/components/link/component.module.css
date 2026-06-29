@@ -64,11 +64,11 @@
         border-radius: 50%;
         width: 100%;
         height: 100%;
-        object-fit: cover;        /* crops the image to fill the circle */
-        object-position: center;  /* keeps the face centered */
+        object-fit: cover; /* crops the image to fill the circle */
+        object-position: center; /* keeps the face centered */
         background: var(--border); /* placeholder color while image loads */
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        display: block;           /* removes the inline baseline gap */
+        display: block; /* removes the inline baseline gap */
     }
 
     .edit-btn {
@@ -397,6 +397,10 @@
             width: 32px;
             height: 32px;
         }
+
+        .credits {
+            margin: 10px 0 0 0;
+        }
     }
 
     /* Themes */
@@ -437,11 +441,5 @@
         --code-bg: #00363d;
         --accent: #00bcd4;
         --accent-border: #00bcd4;
-    }
-
-    @media (max-width: 768px) {
-        .credits {
-            margin: 10px 0 0 0;
-        }
     }
 }

@@ -37,6 +37,13 @@ service cloud.firestore {
                      || (request.auth != null && request.auth.uid == userid);
           allow list: if true;
           allow write: if request.auth != null && request.auth.uid == userid;
+
+          // Allow anyone (including unauthenticated visitors) to increment
+          // clickCount by exactly 1. The diff() check ensures no other field
+          // can be touched through this rule — not title, url, isActive, etc.
+          allow update: if
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clickCount']) &&
+              request.resource.data.clickCount == resource.data.clickCount + 1;
       }
     }
 

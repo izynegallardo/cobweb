@@ -2,7 +2,7 @@ import styles from './component.module.css'
 import CobwebLogo from '@/assets/cobweb-light.svg'
 import { auth } from '@/utils/firebase'
 import { getProfileByUsername, migrateGoogleAvatar } from '@/services/users'
-import { createPublicLinkQueryFn } from '@/services/links'
+import { createPublicLinkQueryFn, incrementLinkClick } from '@/services/links'
 import { createPaginator } from '@/utils/pagination'
 import { showSkeleton, hideSkeleton } from '@/utils/skeleton'
 
@@ -58,14 +58,14 @@ async function initLinks(uid) {
     })
 
     const links = await paginator.nextPage()
-    renderLinks(links)
+    renderLinks(links, uid)
 
     if (paginator.hasNextPage) {
-        renderShowMoreBtn(paginator)
+        renderShowMoreBtn(paginator, uid)
     }
 }
 
-function renderShowMoreBtn(paginator) {
+function renderShowMoreBtn(paginator, uid) {
     const chainLink = document.querySelector(`.${styles['chain-link']}`)
     if (!chainLink) return
 
@@ -84,7 +84,7 @@ function renderShowMoreBtn(paginator) {
 
         await paginator.nextPage()
         // Render ALL fetched items so far — not just the new page
-        renderLinks(paginator.getAllFetched())
+        renderLinks(paginator.getAllFetched(), uid)
 
         if (paginator.hasNextPage) {
             btn.textContent = 'Show more'
@@ -123,7 +123,7 @@ function renderProfile(profile) {
     }
 }
 
-function renderLinks(links) {
+function renderLinks(links, uid) {
     const chainLink = document.querySelector(`.${styles['chain-link']}`)
     if (!chainLink || !Array.isArray(links) || !links.length) {
         const p = document.createElement('p')
@@ -176,6 +176,14 @@ function renderLinks(links) {
             spacer.setAttribute('aria-hidden', 'true')
 
             a.append(iconSpan, titleSpan, spacer)
+
+            // Track click — fire-and-forget, never blocks navigation.
+            // Skip if the viewer is the profile owner.
+            a.addEventListener('click', () => {
+                if (auth.currentUser?.uid === uid) return
+                incrementLinkClick(uid, link.id).catch(() => {})
+            })
+
             return a
         }),
     )

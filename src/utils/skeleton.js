@@ -83,13 +83,13 @@ const templates = {
                     <div class="skeleton-bone skeleton-bone--drag"></div>
                     <div class="skeleton-bone skeleton-bone--icon-md"></div>
                     <div class="skeleton-wrap skeleton-list-text">
-                        <div class="skeleton-bone skeleton-bone--text-sm" style="width:25%;"></div>
-                        <div class="skeleton-bone skeleton-bone--text-sm" style="width:55%;"></div>
-                        <div class="skeleton-bone skeleton-bone--text-sm" style="width:10%;"></div>
+                        <div class="skeleton-bone skeleton-bone--text-sm" style="min-width:10%;"></div>
+                        <div class="skeleton-bone skeleton-bone--text-sm" style="min-width:15%;"></div>
+                        <div remove-skeleton-bone--text-sm class="skeleton-bone skeleton-bone--text-sm" style="min-width:5%;"></div>
                     </div>
                     <div class="skeleton-wrap skeleton-list-actions">
-                        <div class="skeleton-bone skeleton-bone--toggle"></div>
-                        <div class="skeleton-bone skeleton-bone--icon-sm"></div>
+                        <div remove-icon-sm class="skeleton-bone skeleton-bone--circle-icon-sm"></div>
+                        <div remove-icon-sm class="skeleton-bone skeleton-bone--icon-sm"></div>
                         <div class="skeleton-bone skeleton-bone--icon-sm"></div>
                     </div>
                 </div>
