@@ -1,7 +1,4 @@
 {
-    "projects": {
-        "default": "cobweb-site"
-    },
     "hosting": {
         "public": "dist",
         "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
