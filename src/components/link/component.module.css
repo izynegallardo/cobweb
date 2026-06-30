@@ -56,8 +56,8 @@
 
     .avatar-wrap {
         position: relative;
-        width: 92px;
-        height: 92px;
+        width: 152px;
+        height: 152px;
     }
 
     .avatar {
@@ -73,11 +73,11 @@
 
     .edit-btn {
         position: absolute;
-        bottom: -2px;
-        right: -2px;
+        bottom: 12px;
+        right: 2px;
 
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
 
         background-color: #2c2c2c;
@@ -94,6 +94,7 @@
             background-color 0.15s ease;
 
         &:hover {
+            border: 1px solid;
             background-color: #111111;
             /* transform: scale(1.05); */
         }

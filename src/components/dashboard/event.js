@@ -3,8 +3,9 @@ import styles from './component.module.css'
 import iconDrag from '@/assets/icons/drag.svg?raw'
 import iconEdit from '@/assets/icons/edit.svg?raw'
 import iconTrash from '@/assets/icons/trash.svg?raw'
-import iconEllipsis from '@/assets/icons/trash.svg?raw'
+import iconEllipsis from '@/assets/icons/ellipsis.svg?raw'
 import { getCurrentUserProfile } from '@/services/users'
+import { logout } from '@/services/auth'
 import {
     createLink,
     createLinkQueryFn,
@@ -35,6 +36,7 @@ export default async function Events() {
 
     const user = await getCurrentUserProfile()
     renderSidebarFooter(user)
+    handleLogout()
 
     const linksList = document.getElementById('links-list')
 
@@ -226,6 +228,44 @@ function renderSidebarFooter(user) {
     if (usernameEl && user.username) {
         usernameEl.textContent = `@${user.username}`
     }
+}
+
+/**
+ * Wires up the sidebar Logout button. Opens a confirm modal (consistent
+ * with the delete-link confirmation pattern) before signing the user out.
+ *
+ * On confirm:
+ *   1. `logout()` clears the in-memory cache and signs out of Firebase Auth
+ *   2. `window.app.pushRoute('/auth')` navigates to the login screen via
+ *      the SPA router (no full page reload)
+ *
+ * Errors are surfaced via window.dialog and re-thrown so the modal stays
+ * open, matching the error-handling convention used elsewhere in this file.
+ */
+function handleLogout() {
+    const logoutBtn = document.getElementById('logout-btn')
+
+    logoutBtn?.addEventListener('click', () => {
+        window.modal.open({
+            title: 'Log out',
+            submitLabel: 'Logout',
+            body: `
+                <p style="margin:0;font-size:14px;color:var(--text-h);line-height:1.6">
+                    Are you sure you want to log out?
+                </p>
+            `,
+            onSubmit: async () => {
+                try {
+                    await logout()
+                    window.app.pushRoute('/auth')
+                } catch (error) {
+                    window.dialog.show('Failed to log out. Please try again.', 'error')
+                    console.error('Dashboard: logout failed', error)
+                    throw error // keeps modal open
+                }
+            },
+        })
+    })
 }
 
 function renderLinks(linksList, links, user, paginator, state) {
