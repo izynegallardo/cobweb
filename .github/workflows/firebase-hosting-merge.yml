@@ -17,4 +17,4 @@ jobs:
                   repoToken: ${{ secrets.GITHUB_TOKEN }}
                   firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COBWEB_SITE }}
                   channelId: live
-                  projectId: cobweb-site
+                  projectId: 391595036740
