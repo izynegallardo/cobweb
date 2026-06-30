@@ -225,6 +225,7 @@
     .content-title {
         font-size: 20px;
         font-weight: 700;
+        text-wrap-mode: nowrap;
         color: var(--text-h);
         margin: 0;
     }
@@ -249,6 +250,7 @@
         color: var(--text-h);
         font-size: 14px;
         font-weight: 500;
+        text-wrap-mode: nowrap;
         cursor: pointer;
         transition:
             border-color 0.15s,
@@ -268,6 +270,7 @@
         color: var(--bg);
         font-size: 14px;
         font-weight: 600;
+        text-wrap-mode: nowrap;
         cursor: pointer;
         transition: opacity 0.15s;
     }
@@ -295,6 +298,7 @@
         border-radius: 12px;
         box-sizing: content-box;
         width: 80%;
+        min-width: 253px;
         gap: 12px;
         background: var(--code-bg);
         transition:
