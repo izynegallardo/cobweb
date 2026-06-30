@@ -6,6 +6,7 @@ import ThemeLogo from '@/assets/icons/theme.svg?raw'
 import MessagesLogo from '@/assets/icons/messages.svg?raw'
 import SettingsLogo from '@/assets/icons/settings.svg?raw'
 import PreviewLogo from '@/assets/icons/preview.svg?raw'
+import LogoutLogo from '@/assets/icons/logout.svg?raw'
 
 export default function Main(root) {
     root.innerHTML = `
@@ -57,6 +58,10 @@ export default function Main(root) {
                             </div>
                         </div>
                     </a>
+                    <button type='button' id='logout-btn' class='${styles['logout-btn']}'>
+                        ${LogoutLogo}
+                        <span>Logout</span>
+                    </button>
                 </div>
             </aside>
 

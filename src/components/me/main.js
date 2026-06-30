@@ -26,7 +26,7 @@ export default function Main(root) {
                     <div class='${styles['form-group']}'>
                         <label class='${styles['label']}'>Username</label>
                         <div class='${styles['input-prefix-wrap']}'>
-                            <span class='${styles['input-prefix']}'>cobweb.app/</span>
+                            <span class='${styles['input-prefix']}'>cobweb-site.web.app/</span>
                             <input
                                 type="text"
                                 class='${styles['form-input']}'
