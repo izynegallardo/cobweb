@@ -36,6 +36,10 @@ export default async function Events(params) {
         if (auth.currentUser?.uid === profile.uid) {
             const editBtn = document.querySelector(`.${styles['edit-btn']}`)
             if (editBtn) editBtn.style.display = 'flex'
+
+            editBtn.addEventListener('click', () => {
+                window.app.pushRoute('/me')
+            })
         }
 
         if (profile.theme) section?.setAttribute('data-theme', profile.theme)

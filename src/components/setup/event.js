@@ -17,6 +17,7 @@ export default async function Events() {
 
     const form = document.querySelector('#setup-form')
     const errorMsg = document.querySelector('#username-error')
+    const submitBtn = form?.querySelector('button[type="submit"]')
 
     if (!form) return
 
@@ -24,20 +25,26 @@ export default async function Events() {
         e.preventDefault()
         errorMsg.textContent = ''
 
-        const formData = new FormData(form)
-        const username = (formData.get('username') || '').trim().toLowerCase()
-
-        if (!/^[a-z0-9_]{3,20}$/.test(username)) {
-            errorMsg.textContent = '3-20 characters. Letters, numbers, and underscores only.'
-            return
-        }
-
-        if (await isUsernameTaken(username)) {
-            errorMsg.textContent = 'Username is already taken.'
-            return
+        const originalBtnText = submitBtn?.textContent
+        if (submitBtn) {
+            submitBtn.disabled = true
+            submitBtn.textContent = 'Creating your account...'
         }
 
         try {
+            const formData = new FormData(form)
+            const username = (formData.get('username') || '').trim().toLowerCase()
+
+            if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+                errorMsg.textContent = '3-20 characters. Letters, numbers, and underscores only.'
+                return
+            }
+
+            if (await isUsernameTaken(username)) {
+                errorMsg.textContent = 'Username is already taken.'
+                return
+            }
+
             // Re-host the OAuth provider photo on Cloudinary so the public
             // link page can display it without Google's session restriction.
             // Falls back to null (no photo) if the fetch/upload fails.
@@ -54,6 +61,11 @@ export default async function Events() {
             window.app.pushRoute('/dashboard')
         } catch (err) {
             window.dialog.show('Something went wrong. Please try again.', 'error')
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false
+                submitBtn.textContent = originalBtnText
+            }
         }
     })
 }
