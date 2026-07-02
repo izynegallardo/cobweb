@@ -9,18 +9,21 @@ export function isValidSize(file) {
     return true
 }
 
+// Single source of truth for username format — used by setup, the profile
+// editor, and Firestore doc IDs (usernames/{username}). Lowercase only since
+// usernames are always normalised to lowercase before being persisted.
+export const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/
+
+/**
+ * Normalises a raw username input (trim + lowercase) and checks it against
+ * USERNAME_REGEX. Does NOT check availability — pair with isUsernameTaken().
+ *
+ * @param {string} username
+ * @returns {boolean}
+ */
 export function isValidUsername(username) {
-    const validUsernameRegex = /^[0-9A-Za-z]{3,16}$/
-
     if (!username) return false
-
-    const cleanUsername = username.trim()
-
-    if (!validUsernameRegex.test(cleanUsername)) {
-        return false
-    }
-
-    return true
+    return USERNAME_REGEX.test(username.trim().toLowerCase())
 }
 
 export function isValidPassword(password) {

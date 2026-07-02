@@ -4,8 +4,11 @@ import {
     updateProfileData,
     updateProfileAvatar,
     migrateGoogleAvatar,
+    updateUsername,
 } from '@/services/users'
-import { isValidSize } from '@/utils/validation'
+import { isUsernameTaken } from '@/services/auth'
+import { isValidSize, isValidUsername } from '@/utils/validation'
+import { UsernameTakenError } from '@/utils/errors'
 import { showSkeleton, hideSkeleton } from '@/utils/skeleton'
 
 export default async function Events() {
@@ -20,6 +23,7 @@ export default async function Events() {
 
         const displayNameInput = document.querySelector('#displayName')
         const usernameInput = document.querySelector('#username')
+        const usernameError = document.querySelector('#username-error')
         const bioInput = document.querySelector('#bio')
         const emailInput = document.querySelector('#email')
         const avatarPreview = document.querySelector('#avatar-preview')
@@ -97,6 +101,12 @@ export default async function Events() {
             input?.addEventListener('input', checkFormChanges)
         })
 
+        // Clear the inline username error as soon as the user edits the field again,
+        // so a stale "already taken" message doesn't linger after they change it.
+        usernameInput?.addEventListener('input', () => {
+            if (usernameError) usernameError.textContent = ''
+        })
+
         // Avatar preview
         avatarInput?.addEventListener('change', () => {
             const file = avatarInput.files[0]
@@ -120,9 +130,34 @@ export default async function Events() {
         })
 
         // Form submit
-        // Form submit
         form?.addEventListener('submit', async (e) => {
             e.preventDefault()
+
+            if (usernameError) usernameError.textContent = ''
+
+            const rawUsername = usernameInput?.value.trim() || ''
+            const normalizedUsername = rawUsername.toLowerCase()
+            const usernameChanged = normalizedUsername !== originalData.username.toLowerCase()
+
+            // Guard clause: validate BEFORE writing anything, so a bad username
+            // never leaves the avatar/displayName/bio partially saved.
+            if (usernameChanged) {
+                if (!isValidUsername(normalizedUsername)) {
+                    if (usernameError) {
+                        usernameError.textContent =
+                            '3-20 characters. Letters, numbers, and underscores only.'
+                    }
+                    return
+                }
+
+                // Fast-path UX check. Not authoritative — updateUsername() re-checks
+                // availability inside a transaction, so a concurrent claim between
+                // this check and the write below still fails safely (caught below).
+                if (await isUsernameTaken(normalizedUsername)) {
+                    if (usernameError) usernameError.textContent = 'Username is already taken.'
+                    return
+                }
+            }
 
             const originalButtonText = saveButton ? saveButton.textContent : 'Save'
 
@@ -136,26 +171,41 @@ export default async function Events() {
                     await updateProfileAvatar(user.uid, selectedAvatarFile)
                 }
 
-                // Step B: Collect text input data (Saves everything currently in the DOM)
+                // Step B: Collect text input data (displayName/bio only — username
+                // is handled separately below via the transactional rename path)
                 const textData = {
                     displayName: displayNameInput?.value.trim() || '',
-                    username: usernameInput?.value.trim() || '',
                     bio: bioInput?.value.trim() || '',
                 }
 
                 // Step C: Run Firestore text profile update service
                 await updateProfileData(user.uid, textData)
 
+                // Step D: Rename, if the username actually changed. Keeps the
+                // usernames/{username} reservation doc in sync with users/{uid}.username
+                // so the public /:username page keeps resolving correctly.
+                if (usernameChanged) {
+                    await updateUsername(user.uid, normalizedUsername, originalData.username)
+                }
+
                 window.dialog.show('Profile saved successfully', 'success')
 
-                originalData = { ...textData }
+                originalData = {
+                    ...textData,
+                    username: usernameChanged ? normalizedUsername : originalData.username,
+                }
+                if (usernameInput) usernameInput.value = originalData.username
                 selectedAvatarFile = null
                 if (avatarInput) avatarInput.value = ''
 
                 checkFormChanges()
             } catch (error) {
-                console.error('Profile update failed:', error)
-                window.dialog.show('An error occurred while saving your profile.', 'error')
+                if (error instanceof UsernameTakenError) {
+                    if (usernameError) usernameError.textContent = 'Username is already taken.'
+                } else {
+                    console.error('Profile update failed:', error)
+                    window.dialog.show('An error occurred while saving your profile.', 'error')
+                }
                 if (saveButton) saveButton.disabled = false
             } finally {
                 if (saveButton) {

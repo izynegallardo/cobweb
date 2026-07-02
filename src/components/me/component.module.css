@@ -56,8 +56,8 @@
     }
 
     .avatar {
-        width: 72px;
-        height: 72px;
+        width: 92px;
+        height: 92px;
         border: 2px solid var(--accent);
         border-radius: 50%;
         object-fit: cover; /* crops the image to fill the circle */
@@ -164,6 +164,12 @@
         color: var(--text);
     }
 
+    .error-msg {
+        font-size: 12px;
+        color: #ff4757;
+        min-height: 14px;
+    }
+
     .submit-btn {
         margin-top: 4px;
         width: 100%;
@@ -200,16 +206,34 @@
     .back-link {
         margin-top: 20px;
         text-align: center;
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .link {
-        color: var(--accent);
+        position: relative;
+        color: #4b5563;
+
+        font-weight: 600;
         text-decoration: none;
-        font-weight: 500;
+        transition: color 0.2s;
     }
 
     .link:hover {
-        text-decoration: underline;
+        color: var(--accent);
+    }
+
+    .link::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: var(--accent);
+        transition: width 0.35s;
+    }
+
+    .link:hover::after {
+        width: 100%;
     }
 }
