@@ -47,10 +47,24 @@ service cloud.firestore {
       }
     }
 
-    // Username reservation path tracking (Used by your auth layer)
+    // Username reservation path tracking (Used by your auth layer).
+    // Reservation docs are only ever create'd or delete'd — never mutated
+    // in place. Rename flows always do delete(old) + create(new) inside a
+    // transaction (see updateUsername in services/users.js), so allowing
+    // create/delete but never update also blocks a would-be hijack where
+    // someone updates an *existing* usernames/{x} doc to point at their own uid.
     match /usernames/{username} {
       allow read: if true;
-      allow write: if request.auth != null;
+
+      // Can only ever reserve a username for yourself, never on someone else's behalf.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.uid;
+
+      // Can only release your own reservation.
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.uid;
+
+      allow update: if false;
     }
 
     // match /{document=**} {
@@ -65,6 +79,7 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if request.auth != null 
                         && !request.path.to_string().contains('/documents/users/')
+                        && !request.path.to_string().contains('/documents/usernames/')
                         && request.time < timestamp.date(2026, 7, 23);
     }
   }

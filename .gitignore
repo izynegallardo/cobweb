@@ -25,3 +25,9 @@ dist-ssr
 
 .env
 .firebase
+
+# Firebase Admin service account key — permanent, unscoped project credential.
+# Never commit this. See scripts/README.md for how to obtain one.
+scripts
+service-account.json
+reconcile-backup-*.json

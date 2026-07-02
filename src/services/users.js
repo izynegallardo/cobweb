@@ -1,7 +1,8 @@
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, runTransaction } from 'firebase/firestore'
 import { auth, database } from '@/utils/firebase'
 import { query, invalidate } from '@/utils/cache'
 import { CACHE_KEYS } from '@/configs/cache-keys.js'
+import { UsernameTakenError } from '@/utils/errors'
 
 /**
  * Fetches the current user's profile.
@@ -62,6 +63,11 @@ export async function getProfileByUsername(username) {
 
 /**
  * Updates the textual profile fields in Firestore.
+ *
+ * Deliberately does NOT touch `username` — renames must go through
+ * updateUsername(), which keeps the `usernames/{username}` reservation
+ * doc in sync. Writing username here directly would desync it (the public
+ * /:username page reads the usernames collection, not users/{uid}.username).
  */
 export async function updateProfileData(uid, formData) {
     if (!uid) throw new Error('User UID is required.')
@@ -69,7 +75,6 @@ export async function updateProfileData(uid, formData) {
     try {
         const textPayload = {
             displayName: formData.displayName,
-            username: formData.username,
             bio: formData.bio,
         }
 
@@ -81,6 +86,68 @@ export async function updateProfileData(uid, formData) {
         return textPayload
     } catch (error) {
         console.error('<error> User.updateProfileData:', error)
+        throw error
+    }
+}
+
+/**
+ * Renames a user's public username.
+ *
+ * The public /:username page resolves purely through the `usernames/{username}`
+ * reservation collection (see getProfileByUsername above) — it is NOT derived
+ * from users/{uid}.username. So a rename has to atomically:
+ *   1. release the old `usernames/{oldUsername}` doc (so it becomes free again)
+ *   2. claim the new `usernames/{newUsername}` doc
+ *   3. update users/{uid}.username to match
+ *
+ * Wrapped in a transaction (not a batch) so the availability check and the
+ * writes are atomic — closing the race where two users could both pass a
+ * pre-check for the same new username and then both "win" the write.
+ *
+ * @param {string} uid
+ * @param {string} newUsername - raw input; will be trimmed + lowercased
+ * @param {string} currentUsername - the username currently on record, so we
+ *                                    know what to release. Passed in rather
+ *                                    than re-fetched so the transaction only
+ *                                    needs one read (the new username's doc).
+ * @throws {UsernameTakenError} if newUsername is already reserved by someone else
+ * @returns {Promise<string>} the normalised (lowercased) username that was saved
+ */
+export async function updateUsername(uid, newUsername, currentUsername) {
+    if (!uid) throw new Error('User UID is required.')
+
+    const normalizedNew = (newUsername || '').trim().toLowerCase()
+    const normalizedOld = (currentUsername || '').trim().toLowerCase()
+
+    // No-op: nothing to reserve or release
+    if (normalizedNew === normalizedOld) return normalizedNew
+
+    const newUsernameRef = doc(database, 'usernames', normalizedNew)
+    const oldUsernameRef = normalizedOld ? doc(database, 'usernames', normalizedOld) : null
+    const userRef = doc(database, 'users', uid)
+
+    try {
+        await runTransaction(database, async (transaction) => {
+            const newUsernameSnap = await transaction.get(newUsernameRef)
+            if (newUsernameSnap.exists()) {
+                throw new UsernameTakenError(normalizedNew)
+            }
+
+            if (oldUsernameRef) transaction.delete(oldUsernameRef)
+            transaction.set(newUsernameRef, { uid })
+            transaction.update(userRef, { username: normalizedNew })
+        })
+
+        // Bust every cache entry this rename touches: the owner's private
+        // profile, and BOTH the old (now 404s) and new public profile pages.
+        invalidate(CACHE_KEYS.profile(uid))
+        if (normalizedOld) invalidate(CACHE_KEYS.publicProfile(normalizedOld))
+        invalidate(CACHE_KEYS.publicProfile(normalizedNew))
+
+        return normalizedNew
+    } catch (error) {
+        if (error instanceof UsernameTakenError) throw error
+        console.error('<error> User.updateUsername:', error)
         throw error
     }
 }

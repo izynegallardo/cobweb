@@ -1,6 +1,8 @@
 import { auth } from '@/utils/firebase'
 import { hasUsername, isUsernameTaken, createUser } from '@/services/auth'
 import { uploadAvatarFromURL } from '@/services/users'
+import { isValidUsername } from '@/utils/validation'
+import { UsernameTakenError } from '@/utils/errors'
 
 export default async function Events() {
     const user = auth.currentUser
@@ -35,11 +37,14 @@ export default async function Events() {
             const formData = new FormData(form)
             const username = (formData.get('username') || '').trim().toLowerCase()
 
-            if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+            if (!isValidUsername(username)) {
                 errorMsg.textContent = '3-20 characters. Letters, numbers, and underscores only.'
                 return
             }
 
+            // Fast-path UX check. Not authoritative — createUser() re-checks
+            // availability inside a transaction, so a concurrent claim between
+            // this check and the write below still fails safely.
             if (await isUsernameTaken(username)) {
                 errorMsg.textContent = 'Username is already taken.'
                 return
@@ -58,9 +63,20 @@ export default async function Events() {
                 username,
                 photoURL,
             })
+
+            // Guard: if the user navigated away while createUser() was in
+            // flight, the form is now detached — skip the redirect entirely.
+            // The account was created successfully; they'll be routed to
+            // /dashboard automatically on their next visit via hasUsername().
+            if (!form.isConnected) return
+
             window.app.pushRoute('/dashboard')
         } catch (err) {
-            window.dialog.show('Something went wrong. Please try again.', 'error')
+            if (err instanceof UsernameTakenError) {
+                errorMsg.textContent = 'Username is already taken.'
+            } else {
+                window.dialog.show('Something went wrong. Please try again.', 'error')
+            }
         } finally {
             if (submitBtn) {
                 submitBtn.disabled = false

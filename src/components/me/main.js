@@ -35,6 +35,7 @@ export default function Main(root) {
                                 placeholder="username"
                             />
                         </div>
+                        <p id='username-error' class='${styles['error-msg']}'></p>
                     </div>
 
                     <div class='${styles['form-group']}'>

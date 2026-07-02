@@ -8,10 +8,12 @@
         "build": "vite build",
         "preview": "vite preview",
         "test": "firebase hosting:channel:deploy preview_name",
-        "deploy": "npm run build && firebase deploy"
+        "deploy": "npm run build && firebase deploy",
+        "reconcile:usernames": "node scripts/reconcile-usernames.mjs"
     },
     "devDependencies": {
         "esbuild": "^0.28.1",
+        "firebase-admin": "^14.1.0",
         "vite": "^8.0.12"
     },
     "dependencies": {

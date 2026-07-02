@@ -1,7 +1,8 @@
 import { auth, database, googleProvider, yahooProvider } from '@/utils/firebase'
-import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import { signInWithPopup, signOut } from 'firebase/auth'
 import { clearAll } from '@/utils/cache'
+import { UsernameTakenError } from '@/utils/errors'
 
 export async function loginWithGoogle() {
     const result = await signInWithPopup(auth, googleProvider)
@@ -28,26 +29,44 @@ export async function isUsernameTaken(username) {
     return snapshot.exists()
 }
 
+/**
+ * Creates the initial user doc set (public profile + private data) and
+ * reserves the chosen username — atomically and race-safe.
+ *
+ * Uses a transaction rather than a plain batch: the availability check
+ * (isUsernameTaken, used for fast UX feedback before calling this) has a
+ * TOCTOU race if two people submit the same username at once. The
+ * transaction re-reads usernameRef as its *last* word before committing,
+ * so the second writer always loses cleanly with UsernameTakenError
+ * instead of silently overwriting the first writer's reservation.
+ *
+ * @throws {UsernameTakenError} if the username was claimed concurrently
+ */
 export async function createUser(uid, { email, displayName, username, photoURL = null }) {
-    const batch = writeBatch(database)
-    const usernameRef = doc(database, 'usernames', username.toLowerCase())
+    const normalizedUsername = username.toLowerCase()
+    const usernameRef = doc(database, 'usernames', normalizedUsername)
     const publicUserRef = doc(database, 'users', uid)
     const privateDataRef = doc(database, 'users', uid, 'private', 'data')
 
-    batch.set(usernameRef, { uid })
+    await runTransaction(database, async (transaction) => {
+        const usernameSnap = await transaction.get(usernameRef)
+        if (usernameSnap.exists()) {
+            throw new UsernameTakenError(normalizedUsername)
+        }
 
-    batch.set(publicUserRef, {
-        uid,
-        displayName,
-        username: username.toLowerCase(),
-        photoURL,
-        bio: '',
-        createdAt: serverTimestamp(),
+        transaction.set(usernameRef, { uid })
+
+        transaction.set(publicUserRef, {
+            uid,
+            displayName,
+            username: normalizedUsername,
+            photoURL,
+            bio: '',
+            createdAt: serverTimestamp(),
+        })
+
+        transaction.set(privateDataRef, {
+            email: email,
+        })
     })
-
-    batch.set(privateDataRef, {
-        email: email,
-    })
-
-    await batch.commit()
 }
