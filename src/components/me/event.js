@@ -10,7 +10,6 @@ import { isUsernameTaken } from '@/services/auth'
 import { isValidSize, isValidUsername } from '@/utils/validation'
 import { UsernameTakenError } from '@/utils/errors'
 import { showSkeleton, hideSkeleton } from '@/utils/skeleton'
-import { getOptimizedAvatarUrl } from '@/utils/cloudinary'
 
 export default async function Events() {
     try {
@@ -73,9 +72,7 @@ export default async function Events() {
                         })
                         .catch(() => {})
                 } else {
-                    // .avatar renders at 92px — request 2x (184px) for retina, with
-                    // Cloudinary's f_auto/q_auto picking the best format/compression per browser.
-                    setAvatarBackground(getOptimizedAvatarUrl(user.photoURL, 184))
+                    setAvatarBackground(user.photoURL)
                 }
             }
         }

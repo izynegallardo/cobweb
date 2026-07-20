@@ -29,7 +29,6 @@ It's a from-scratch build with no UI framework: a hand-rolled single-page app on
 - **Public profile pages** — `/{username}` renders a visitor-facing page with cursor-paginated, active-only links.
 - **Per-link click tracking** — atomic Firestore counters, reflected on the dashboard in real time via `onSnapshot`.
 - **Race-safe usernames** — claiming, renaming, and releasing usernames run inside Firestore transactions, so two people can never win the same username.
-- **Optimized avatars** — Cloudinary transformations (`f_auto,q_auto`, context-specific widths) applied only to genuine Cloudinary URLs; other sources (Google avatars, blob/data URLs) pass through untouched.
 - **Bot & abuse protection** — Firebase App Check with reCAPTCHA Enterprise.
 - **Custom SPA router** — a small hand-rolled client-side router (`core/spa.js`) with delegated anchor interception and same-URL history guards.
 
@@ -58,7 +57,7 @@ src/
 ├── layouts/        # shared page shells
 ├── core/spa.js     # hand-rolled SPA router
 ├── services/       # Firestore/Auth data access, one file per domain
-├── utils/          # cross-cutting helpers (cache, pagination, cloudinary, validation, errors…)
+├── utils/          # cross-cutting helpers (cache, pagination, validation, errors…)
 ├── configs/        # static config + cache-key factories
 └── styles/         # global CSS
 ```
