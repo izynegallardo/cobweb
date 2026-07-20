@@ -7,7 +7,7 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "test": "firebase hosting:channel:deploy preview_name",
+        "sftdeploy": "firebase hosting:channel:deploy preview_name",
         "deploy": "npm run build && firebase deploy",
         "reconcile:usernames": "node scripts/reconcile-usernames.mjs"
     },

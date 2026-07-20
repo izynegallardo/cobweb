@@ -5,6 +5,7 @@ import { getProfileByUsername, migrateGoogleAvatar } from '@/services/users'
 import { createPublicLinkQueryFn, incrementLinkClick } from '@/services/links'
 import { createPaginator } from '@/utils/pagination'
 import { showSkeleton, hideSkeleton } from '@/utils/skeleton'
+import { getOptimizedAvatarUrl } from '@/utils/cloudinary'
 
 const PAGE_SIZE = 12
 
@@ -118,7 +119,12 @@ function renderProfile(profile) {
         // fall straight to the initials fallback for existing accounts that
         // still have a raw Google URL stored before the Cloudinary migration.
         const isGoogleURL = profile.photoURL?.includes('googleusercontent.com')
-        const photoURL = profile.photoURL && !isGoogleURL ? profile.photoURL : fallbackPhoto
+        // .avatar renders at 152px — request 2x (304px) for retina, with
+        // Cloudinary's f_auto/q_auto picking the best format/compression per browser.
+        const photoURL =
+            profile.photoURL && !isGoogleURL
+                ? getOptimizedAvatarUrl(profile.photoURL, 304)
+                : fallbackPhoto
 
         avatar.src = photoURL
         avatar.onerror = () => {
