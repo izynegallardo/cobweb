@@ -6,6 +6,7 @@ import iconTrash from '@/assets/icons/trash.svg?raw'
 import iconEllipsis from '@/assets/icons/ellipsis.svg?raw'
 import { getCurrentUserProfile } from '@/services/users'
 import { logout } from '@/services/auth'
+import { getOptimizedAvatarUrl } from '@/utils/cloudinary'
 import {
     createLink,
     createLinkQueryFn,
@@ -220,7 +221,9 @@ function renderSidebarFooter(user) {
     const usernameEl = document.querySelector('[data-username]')
 
     if (avatarEl && user.photoURL) {
-        avatarEl.style.backgroundImage = `url(${user.photoURL})`
+        // .user-avatar renders at 32px — request 2x (64px) for retina, with
+        // Cloudinary's f_auto/q_auto picking the best format/compression per browser.
+        avatarEl.style.backgroundImage = `url(${getOptimizedAvatarUrl(user.photoURL, 64)})`
         avatarEl.style.backgroundSize = 'cover'
         avatarEl.style.backgroundPosition = 'center'
     }
